@@ -2,5 +2,6 @@
 /mazes/*
 /useless
 /useless/*
-q_learning.py
+/tmp_game
+/tmp_game/*
 sentdex.py

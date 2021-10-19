@@ -1,10 +1,12 @@
+from pickle import FALSE
 import gym
 from numpy.lib.utils import info
 from dependencies import *
 from player import Player
 from hunter import Hunter
 from portal import Portal
-from display import *
+from graphs import *
+from game_display import *
 import gym
 from gym.spaces.box import Box
 from gym.spaces.discrete import Discrete
@@ -30,7 +32,10 @@ class GameEnv:
   def __init__(self, width=SIZE, height=SIZE):
     self.width = width
     self.height = height
+    # reward in one timestep
     self.reward = 0
+    # cumulative reward
+    self.cum_reward = 0
     
     self.player = None
     self.hunter = None
@@ -52,6 +57,8 @@ class GameEnv:
     self.reward = 0
 
     self.won = False
+
+    self.display = Display(width, height)
   
   def make(env="myEnv"):
     return
@@ -59,7 +66,9 @@ class GameEnv:
   def reset(self):
     self.done = False
     self.reward = 0
+    self.cum_reward = 0
     self.timestep = 0 
+    self.won = False
 
     half_width = (self.width-1)/2
     half_height = (self.height-1)/2
@@ -72,9 +81,6 @@ class GameEnv:
     self.portal = Portal(self.width -1 -x , self.height -1 -y)
 
     self.update_observation_space()
-
-    self.won = False
-
     return self.observation_space
 
   def step(self, action):
@@ -82,17 +88,18 @@ class GameEnv:
     # self.hunter.move(self)
     self.player.action(self, action)
 
-    self.update_reward()
     self.update_observation_space()
-    
+    self.update_reward()
+    self.cum_reward += self.reward
+
     return self.observation_space, self.reward, self.done, self.info
   
   def render(self):
     # redefine
-    show_display(self)
+    self.display.render(self)
   
   def close(self):
-    return
+    self.display.quit()
 
   def update_observation_space(self):
     self.observation_space = (self.player - self.portal, self.player - self.hunter)

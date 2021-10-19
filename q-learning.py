@@ -1,9 +1,7 @@
-from os import stat
 import gym
 import numpy as np
-import matplotlib.pyplot as plt
 import random
-from display import plot_rewards, plot_victories
+from graphs import plot_rewards, plot_victories
 from environment import GameEnv 
 import pickle
 from dependencies import *
@@ -12,20 +10,21 @@ env = GameEnv(10, 5)
 
 ALPHA = 0.1
 GAMMA = 0.95
-EPISODES = 25_000
-EPSILON = 0.99
-# very small value
-# eps_decay_value = EPSILON/(EPISODES//2) 
+isTraining = False
+
+EPISODES = 25_000 if isTraining else 10
+EPSILON = 0.99 if isTraining else 0.005
 EPS_DECAY = 0.9998
 
-N_MAX_STEPS = 300
-SHOW_EVERY = 3000
+SHOW_EVERY = 3_000 if isTraining else 1
 
 NAME_TABLE = 'q_learning_table'
+SAVE_TABLE = True if isTraining else False
+SAVE_IMAGES = True if isTraining else False
 
-start_q_table =  None # or name. e.g., 'q_learning_table.pickle'
+start_q_table = 'q_learning_table.pickle' # or None
 
-# q_table shape: [((2*height, 2*width), (2*height, 2*width))][4]
+# q_table shape: [((+-height, +-width), (+-height, +-width))][4]
 def initialize_q_table(env):
   q_table = {}
   h = env.height    
@@ -45,9 +44,9 @@ def update_q_table(env, state, action, new_state, reward):
 def epsilon_greedy_policy(epsilon, state):
   
     if random.uniform(0,1) < epsilon:
-      return np.random.randint(0, env.action_space.n)
+        return np.random.randint(0, env.action_space.n)
     else:
-      return np.argmax(q_table[state])
+        return np.argmax(q_table[state])
 
 
 def q_learning(env):
@@ -61,11 +60,12 @@ def q_learning(env):
         episode_reward = 0
 
         if i % SHOW_EVERY == 0:
-          print(f"on # {i}, epsilon: {epsilon}")
-          print(f"{SHOW_EVERY} ep mean {np.mean(scores[-SHOW_EVERY:])}")
-          show = True
+            print(f"on # {i}, epsilon: {epsilon}")
+            if i != 0:
+                print(f"{SHOW_EVERY} ep mean {np.mean(scores[-SHOW_EVERY:])}")
+            show = True
         else:
-          show = False
+            show = False
 
         while done == False:
           
@@ -74,31 +74,33 @@ def q_learning(env):
             episode_reward += reward
 
             if show:
-              env.render()
+                env.render()
 
             # if not done:
             update_q_table(env, obs, action, new_obs, reward) 
             
             if done:
-              scores.append(episode_reward)
-              wins.append(env.won)
+                scores.append(episode_reward)
+                wins.append(env.won)
 
             obs = new_obs       
           
         epsilon *= EPS_DECAY
 
     moving_avg = np.convolve(scores, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode='valid')
-    plot_rewards(moving_avg, 'q_learning_rewards')
+    plot_rewards(moving_avg, 'q_learning_rewards', save=SAVE_IMAGES)
 
     victories_avg = np.convolve(wins, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode='valid')
-    plot_victories(victories_avg, 'q_learning_victories_iterations')
+    plot_victories(victories_avg, 'q_learning_victories_iterations', save=SAVE_IMAGES)
 
-    with open(NAME_TABLE + ".pickle", "wb") as f:
-      pickle.dump(q_table, f)
+    if (SAVE_TABLE):
+        with open(NAME_TABLE + ".pickle", "wb") as f:
+          pickle.dump(q_table, f)
 
     env.close()
 
 if start_q_table is None:
+  print("CREATING Q-TABLE")
   q_table = initialize_q_table(env)
 
 else:

@@ -43,13 +43,13 @@ class agent:
     # elif choice == 3:
       # self.move(env, x=1, y=-1)
 
-  def move(self, env, x=False, y=False):
-    if not x:
+  def move(self, env, x=-1000, y=-1000):
+    if x == -1000:
       self.x += np.random.randint(-1, 2)
     else:
        self.x += x
     
-    if not y:
+    if y == -1000:
       self.y += np.random.randint(-1, 2)
     else:
        self.y += y
