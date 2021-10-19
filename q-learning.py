@@ -6,23 +6,25 @@ from environment import GameEnv
 import pickle
 from dependencies import *
 
-env = GameEnv(10, 5) 
+env = GameEnv(16, 8) 
 
 ALPHA = 0.1
 GAMMA = 0.95
 isTraining = False
 
-EPISODES = 25_000 if isTraining else 10
+EPISODES = 100_000 if isTraining else 10
 EPSILON = 0.99 if isTraining else 0.005
-EPS_DECAY = 0.9998
+# if we whanted that, in a third of the number of episodes, epsilon equals 0.5:
+# decay = 2**(-log2(0.5/EPSILON) / (EPISODES / 3)) ~ 2**(-1 / (EPISODES / 3)) ~ 2**(-3 / EPISODES)
+EPS_DECAY = 2**(-4 / EPISODES) 
 
-SHOW_EVERY = 3_000 if isTraining else 1
+SHOW_EVERY = 4_000 if isTraining else 1
 
 NAME_TABLE = 'q_learning_table'
 SAVE_TABLE = True if isTraining else False
 SAVE_IMAGES = True if isTraining else False
 
-start_q_table = 'q_learning_table.pickle' # or None
+start_q_table = None if isTraining else NAME_TABLE + '.pickle'
 
 # q_table shape: [((+-height, +-width), (+-height, +-width))][4]
 def initialize_q_table(env):
@@ -53,6 +55,8 @@ def q_learning(env):
     epsilon = EPSILON
     scores = []
     wins = []
+    time_fast = 5 if isTraining else 100
+    time_slow = 400
 
     for i in range(EPISODES):
         obs = env.reset()
@@ -67,6 +71,8 @@ def q_learning(env):
         else:
             show = False
 
+        # show = False ####### CHANGE IT IF YOU WANT ############
+
         while done == False:
           
             action = epsilon_greedy_policy(epsilon, obs)
@@ -74,7 +80,7 @@ def q_learning(env):
             episode_reward += reward
 
             if show:
-                env.render()
+                env.render(time_fast=time_fast, time_slow=time_slow)
 
             # if not done:
             update_q_table(env, obs, action, new_obs, reward) 

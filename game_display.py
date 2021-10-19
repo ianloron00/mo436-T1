@@ -23,11 +23,11 @@ class Display:
         self.icon = pg.image.load(os.path.join(char_addr, 'rat.png'))
 
         player = pg.image.load(os.path.join(char_addr, 'rat.png'))
-        portal = pg.image.load(os.path.join(char_addr, 'cheese.png'))
+        target = pg.image.load(os.path.join(char_addr, 'cheese.png'))
         hunter = pg.image.load(os.path.join(char_addr, 'cat.png'))
 
         self.player = pg.transform.scale(player, (P, P))
-        self.portal = pg.transform.scale(portal, (P, P))
+        self.target = pg.transform.scale(target, (P, P))
         self.hunter = pg.transform.scale(hunter, (P, P))
 
         self.font = pg.font.Font(pg.font.get_default_font(), 48)
@@ -59,14 +59,14 @@ class Display:
 
         playerX, playerY = env.player.x, env.player.y
         hunterX, hunterY = env.hunter.x, env.hunter.y
-        portalX, portalY = env.portal.x, env.portal.y
+        targetX, targetY = env.target.x, env.target.y
 
         if playerX != None:
             self.char_mv(self.player, playerX, playerY)
         if hunterX != None:
             self.char_mv(self.hunter, hunterX, hunterY)
-        if portalX != None:
-            self.char_mv(self.portal, portalX, portalY)
+        if targetX != None:
+            self.char_mv(self.target, targetX, targetY)
         pg.display.update()
 
         if not env.done: 
