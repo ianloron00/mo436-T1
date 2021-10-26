@@ -32,6 +32,8 @@ class Display:
 
         self.font = pg.font.Font(pg.font.get_default_font(), 48)
 
+        pg.display.quit()
+
     def char_mv(self, character, x, y):
         x = P * x
         y = P * y
