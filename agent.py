@@ -1,4 +1,4 @@
-from dependencies import *
+from q_learning.basis.dependencies import *
 
 class agent:
   def __init__(self, x=np.random.randint(0,10), y=np.random.randint(0,10)):
@@ -25,23 +25,27 @@ class agent:
   def get_position(self):
     return (self.x, self.y)
 
-  def action(self, env, choice):
+  def get_direction(self, choice):
     if choice == 0:
-      self.move(env, x=1, y=0)
+        return (1, 0)
     elif choice == 1:
-      self.move(env, x=-1, y=0)
+        return (-1, 0)
     elif choice == 2:
-      self.move(env, x=0, y=1)
-    elif choice == 3:
-      self.move(env, x=0, y=-1)
+        return (0, 1)
+    else:
+        return (0, -1)
+
+  def action(self, env, choice):
+    x, y = self.get_direction(choice)
+    self.move(x, y)
     # if choice == 0:
-      # self.move(env, x=1, y=1)
+    #   self.move(env, x=1, y=0)
     # elif choice == 1:
-      # self.move(env, x=-1, y=-1)
+    #   self.move(env, x=-1, y=0)
     # elif choice == 2:
-      # self.move(env, x=-1, y=1)
+    #   self.move(env, x=0, y=1)
     # elif choice == 3:
-      # self.move(env, x=1, y=-1)
+    #   self.move(env, x=0, y=-1)
 
   def move(self, env, x=-1000, y=-1000):
     if x == -1000:
