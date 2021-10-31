@@ -16,8 +16,9 @@ ENEMY_PENALTY = 300
 FOOD_REWARD = 25
 CONST_EPSILON = 100
 GAMA = 0.9
+LAMBDA = 0.2
 
-SHOW_EVERY = 3000  # how often to play through env visually.
+SHOW_EVERY = 100  # how often to play through env visually.
 
 # Em duvida se será que Q table ou V table...
 
@@ -124,6 +125,7 @@ E_table = loadTable(states, 4)
 
 #Loop through all the steps on the episode
 rng = np.random.default_rng()
+
 for episode in range(HM_EPISODES):
 
     player = Blob()
@@ -133,9 +135,27 @@ for episode in range(HM_EPISODES):
     for key in E_table:
         E_table[key] = np.zeros(4)
 
-    expected_return = []
+
     actions = []
     ep_states = []
+
+    obs = (player-food, player-enemy)
+    ep_states.append(obs)
+
+    maxq = np.max(q_table[obs])
+    optimal_action = np.where(q_table[obs] == maxq)[0]
+    if len(optimal_action) > 1:
+        action = rng.choice(optimal_action)
+    else:
+        action = optimal_action[0]
+
+    actions.append(action)
+
+    try:
+        nsa_table[ep_states[-1]][actions[-1]] += 1
+    except:
+        nsa_table[ep_states[-1]] = np.zeros(4)
+        nsa_table[ep_states[-1]][actions[-1]] = 1
 
     if episode % SHOW_EVERY == 0:
         print(f"on #{episode}, mean epsilon is WRITE SOMETHING HERE")
@@ -145,23 +165,8 @@ for episode in range(HM_EPISODES):
         show = False
 
     for step in range(200):
-        obs = (player-food, player-enemy)
-        ep_states.append(obs)
 
-        # Chosing the next step
-
-        maxq = np.max(q_table[obs])
-        optimal_action = np.where(q_table[obs] == maxq)[0]
-        if len(optimal_action) > 1:
-            action = rng.choice(4)
-        else:
-            epsilon = CONST_EPSILON/(CONST_EPSILON + ns_table[obs])
-            prob_actions = np.zeros(4) + epsilon/4
-            prob_actions[optimal_action] += 1 - epsilon
-            action = rng.choice(4, p = prob_actions)
-
-        actions.append(action)
-        player.action(action)
+        player.action(actions[-1])
 
         if player.x == enemy.x and player.y == enemy.y:
             reward = -ENEMY_PENALTY
@@ -169,11 +174,6 @@ for episode in range(HM_EPISODES):
             reward = FOOD_REWARD
         else:
             reward = -MOVE_PENALTY
-
-        expected_return.append(0)
-        exp = len(expected_return)-1
-        expected_return = [(lambda i, x: x + reward*(GAMA**(exp-i)))(i, x)
-        for i, x in enumerate(expected_return)]
 
         if show:
             env = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)  # starts an rbg of our size
@@ -193,27 +193,32 @@ for episode in range(HM_EPISODES):
         if reward == FOOD_REWARD or reward == -ENEMY_PENALTY:
             break
 
-    obs = (player-food, player-enemy)
-    ep_states.append(obs)
-    optimalvalue = 0
+        obs = (player-food, player-enemy)
+        ep_states.append(obs)
 
-    for id, state in enumerate(ep_states):
+        maxq = np.max(q_table[obs])
+        optimal_action = np.where(q_table[obs] == maxq)[0]
+        if len(optimal_action) > 1:
+            action = rng.choice(optimal_action)
+        else:
+            action = optimal_action[0]
+
+        actions.append(action)
 
         try:
-            ns_table[state] += 1
+            nsa_table[ep_states[-1]][actions[-1]] += 1
         except:
-            ns_table[state] = 1
-        if id < len(actions):
-            action =  actions[id]
-            try:
-                nsa_table[state][action] += 1
-            except:
-                nsa_table[state] = np.zeros(4)
-                nsa_table[state][action] = 1
-            alpha = 1/nsa_table[state][action]
-            q_table[state][action] += alpha*(expected_return[id] - q_table[state][action])
-            optimalvalue += q_table[state][action]
-    optimalvalues.append(optimalvalue)
+            nsa_table[ep_states[-1]] = np.zeros(4)
+            nsa_table[ep_states[-1]][actions[-1]] = 1
+
+        delta = reward + GAMA*q_table[ep_states[-1]][actions[-1]] - q_table[ep_states[-2]][actions[-2]]
+        E_table[ep_states[-2]] += 1
+
+        for id, value in enumerate(ep_states):
+            alpha = 1/nsa_table[value][actions[id]]
+            q_table[ep_states[-2]][actions[-2]] += alpha*delta*E_table[value][actions[id]]
+            E_table[value][actions[id]] *= GAMA*LAMBDA
+
 
 moving_avg = np.convolve(optimalvalues, np.ones((SHOW_EVERY,))/SHOW_EVERY, mode='valid')
 
