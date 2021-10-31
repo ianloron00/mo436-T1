@@ -18,7 +18,7 @@ CONST_EPSILON = 100
 GAMA = 0.9
 LAMBDA = 0.2
 
-SHOW_EVERY = 100  # how often to play through env visually.
+SHOW_EVERY = 3000  # how often to play through env visually.
 
 # Em duvida se será que Q table ou V table...
 
@@ -132,12 +132,11 @@ for episode in range(HM_EPISODES):
     food = Blob()
     enemy = Blob()
 
-    for key in E_table:
-        E_table[key] = np.zeros(4)
-
+    E_table = {}
 
     actions = []
     ep_states = []
+    rewards = 0
 
     obs = (player-food, player-enemy)
     ep_states.append(obs)
@@ -150,6 +149,8 @@ for episode in range(HM_EPISODES):
         action = optimal_action[0]
 
     actions.append(action)
+
+    E_table[obs] = np.zeros(4)
 
     try:
         nsa_table[ep_states[-1]][actions[-1]] += 1
@@ -175,6 +176,8 @@ for episode in range(HM_EPISODES):
         else:
             reward = -MOVE_PENALTY
 
+        rewards += reward
+
         if show:
             env = np.zeros((SIZE, SIZE, 3), dtype=np.uint8)  # starts an rbg of our size
             env[food.x][food.y] = d[FOOD_N]  # sets the food location tile to green color
@@ -196,6 +199,8 @@ for episode in range(HM_EPISODES):
         obs = (player-food, player-enemy)
         ep_states.append(obs)
 
+        E_table[obs] = np.zeros(4)
+
         maxq = np.max(q_table[obs])
         optimal_action = np.where(q_table[obs] == maxq)[0]
         if len(optimal_action) > 1:
@@ -212,12 +217,15 @@ for episode in range(HM_EPISODES):
             nsa_table[ep_states[-1]][actions[-1]] = 1
 
         delta = reward + GAMA*q_table[ep_states[-1]][actions[-1]] - q_table[ep_states[-2]][actions[-2]]
+
         E_table[ep_states[-2]] += 1
+
 
         for id, value in enumerate(ep_states):
             alpha = 1/nsa_table[value][actions[id]]
             q_table[ep_states[-2]][actions[-2]] += alpha*delta*E_table[value][actions[id]]
             E_table[value][actions[id]] *= GAMA*LAMBDA
+    optimalvalues.append(rewards)
 
 
 moving_avg = np.convolve(optimalvalues, np.ones((SHOW_EVERY,))/SHOW_EVERY, mode='valid')
