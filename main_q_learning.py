@@ -9,7 +9,7 @@ from q_learning.q_extractor_features import *
 
 isTraining = True
 isStochastic = False
-SAVE_IMAGES = True
+SAVE_IMAGES = False
 
 EPISODES = 25_000 if isTraining else 10
 GAMMA = 0.95 if isTraining else 0.0
