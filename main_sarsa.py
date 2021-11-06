@@ -13,7 +13,7 @@ ENEMY_REWARD = -300
 FOOD_REWARD = 100
 
 SIZE = 10
-N_EPISODES = 30_000
+N_EPISODES = 150_000
 N_MAX_STEPS_IN_EPISODE = 10_000
 
 
@@ -25,8 +25,9 @@ movements = (MOVEMENT.UP, MOVEMENT.DOWN, MOVEMENT.LEFT, MOVEMENT.RIGHT)
 movements_values = (MOVEMENT.UP.value, MOVEMENT.DOWN.value,
                     MOVEMENT.LEFT.value, MOVEMENT.RIGHT.value)
 
+is_stochastic = True
 for _lambda in [0, 0.2, 0.4, 0.6, 0.8, 1]:
-    print(f'Epsilon :{_epsilon} and Lambda: {_lambda}')
+    print(f'Lambda: {_lambda}')
 
     sarsa_learning = SarsaLambda(
         _gamma, _alpha, _lambda, movements_values)
@@ -34,11 +35,11 @@ for _lambda in [0, 0.2, 0.4, 0.6, 0.8, 1]:
     optimalvalues = []
 
     food = Blob(SIZE, SIZE - 1, SIZE - 1)
-    enemy = Blob(SIZE, 5, 5)
 
     for episode in tqdm(range(N_EPISODES)):
 
         player = Blob(SIZE, 0, 0)
+        enemy = Blob(SIZE, 5, 5)
 
         steps = 0
         total_reward = 0
@@ -54,6 +55,11 @@ for _lambda in [0, 0.2, 0.4, 0.6, 0.8, 1]:
             action = sarsa_learning.next_action(state_before)
 
             player.action(MOVEMENT(action))
+
+            if is_stochastic:
+                enemy_action = np.random.choice(movements)
+                enemy.action(enemy_action)
+
             reward = 0
             if player == enemy:
                 reward = ENEMY_REWARD
@@ -74,6 +80,6 @@ for _lambda in [0, 0.2, 0.4, 0.6, 0.8, 1]:
     ax.plot([i for i in range(len(optimalvalues))], optimalvalues)
     ax.set_ylabel(f"Rewards")
     ax.set_xlabel("Episodes")
-    ax.set_title(f'{sarsa_learning}')
+    ax.set_title(f'{sarsa_learning} - Stochastic')
     fig.savefig(f'sarsa/images/{repr(sarsa_learning)}.png')
 # plt.show()
