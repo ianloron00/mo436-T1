@@ -4,10 +4,15 @@ from . import MOVEMENT
 
 
 class Blob(object):
-    def __init__(self, size):
+    def __init__(self, size, x=None, y=None):
         self.size = size - 1
-        self.x = np.random.randint(0, size)
-        self.y = np.random.randint(0, size)
+
+        if x is None or y is None:
+            self.x = np.random.randint(0, size)
+            self.y = np.random.randint(0, size)
+        else:
+            self.x = x
+            self.y = y
 
     def __str__(self) -> str:
         return f"{self.x}, {self.y}"

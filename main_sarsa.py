@@ -1,13 +1,10 @@
-import pickle
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import style
-from PIL import Image
 
 from tqdm import tqdm
-from sarsa import MOVEMENT, REWARD, Blob, Sarsa, Tables
+from sarsa import MOVEMENT, Blob, SarsaLambda
 
 style.use("ggplot")
 
@@ -23,27 +20,38 @@ ENEMY_REWARD = -300
 FOOD_REWARD = 100
 
 SIZE = 10
-N_EPISODES = 50_000
-N_MAX_STEPS_IN_EPISODE = 200
+N_EPISODES = 30_000
+N_MAX_STEPS_IN_EPISODE = 1_000
 
-q_table = Tables.new_table(SIZE, 4)
-nsa_table = Tables.new_table(SIZE, 4)
-eligibility_traces = Tables.new_table(SIZE, 4)
-ns_table = Tables.new_table(SIZE, 1)
 
-for llambda in np.array([0, 0.2, 0.4, 0.6, 0.8, 1]):
-    print(f'Lambda = {llambda}')
-    sarsa_learning = Sarsa(0.95, llambda, 0.85, q_table, nsa_table,
-                           eligibility_traces, ns_table)
+_lambda = 0.4
+_gamma = 0.99
+_alpha = 0.1
+_lambda = 0.1
+_epsilon = 0.1
+
+movements = (MOVEMENT.UP, MOVEMENT.DOWN, MOVEMENT.LEFT, MOVEMENT.RIGHT)
+movements_values = (MOVEMENT.UP.value, MOVEMENT.DOWN.value,
+                    MOVEMENT.LEFT.value, MOVEMENT.RIGHT.value)
+
+
+# for _epsilon in 10**np.arange(-1, 3).astype(float):
+for _lambda in np.linspace(0, 1, 6):
+
+    sarsa_learning = SarsaLambda(
+        _gamma, _alpha, _lambda, _epsilon, movements_values)
 
     optimalvalues = []
+
+    food = Blob(SIZE, SIZE - 1, SIZE - 1)
+
     for episode in tqdm(range(N_EPISODES)):
 
-        player = Blob(SIZE)
-        food = Blob(SIZE)
+        player = Blob(SIZE, 0, 0)
         enemy = Blob(SIZE)
 
-        episode_rewards = 0
+        steps = 0
+        total_reward = 0
 
         sarsa_learning.new_episode()
 
@@ -52,11 +60,10 @@ for llambda in np.array([0, 0.2, 0.4, 0.6, 0.8, 1]):
             if player == enemy or player == food:
                 break
 
-            episode_state = (player-food, player-enemy)
-            action = sarsa_learning.epsilon_greedy_policy(episode_state)
+            state_before = (player-food, player-enemy)
+            action = sarsa_learning.next_action(state_before)
 
             player.action(MOVEMENT(action))
-
             reward = 0
             if player == enemy:
                 reward = ENEMY_REWARD
@@ -64,17 +71,15 @@ for llambda in np.array([0, 0.2, 0.4, 0.6, 0.8, 1]):
                 reward = FOOD_REWARD
             else:
                 reward = MOVE_REWARD
+            total_reward += reward
 
-            episode_rewards += reward
-            sarsa_learning.update_episode(episode_state, reward, action)
+            state_after = (player-food, player-enemy)
+            sarsa_learning.update(
+                state_before, action, reward, state_after)
 
-            if step == 0:
-                continue
+        optimalvalues.append(total_reward)
 
-            sarsa_learning.update_tables()
-
-        optimalvalues.append(episode_rewards)
-
+    sarsa_learning.save_pickle()
     moving_avg = moving_average(optimalvalues)
 
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -82,5 +87,5 @@ for llambda in np.array([0, 0.2, 0.4, 0.6, 0.8, 1]):
     ax.set_ylabel(f"Rewards")
     ax.set_xlabel("Episodes")
     ax.set_title(f'{sarsa_learning}')
-    fig.savefig(f'sarsa/{llambda}.png')
-    # plt.show()
+    fig.savefig(f'sarsa/images/{repr(sarsa_learning)}.png')
+# plt.show()

@@ -1,24 +1,46 @@
-import numpy as np
-import pickle
+import copy
+
+DEFAULT_VALUE = 0
 
 
-class Tables:
+class BaseTable:
+    def __init__(self):
+        self.values = {}
 
-    @staticmethod
-    def new_table(n_size, n_actions):
-        table = dict()
-        size = range(-n_size + 1, n_size)
-        for a in size:
-            for b in size:
-                for c in size:
-                    for d in size:
-                        table[((a, b), (c, d))] = np.zeros(n_actions)
+    def get(self, state, action):
+        if state in self.values:
+            return self.values[state].get(action, DEFAULT_VALUE)
 
-        return table
+        return DEFAULT_VALUE
 
-    @staticmethod
-    def load_table(path):
-        table = dict()
-        with open(path, "rb") as f:
-            table = pickle.load(f)
-        return table
+    def get_all_for_state(self, state, all_states):
+        return {action: self.get(state, action) for action in all_states}
+
+    def get_all(self):
+        return copy.deepcopy(self.values)
+
+    def set_all(self, values):
+        self.values = copy.deepcopy(values)
+
+    def set(self, state, action, value=DEFAULT_VALUE):
+        if state not in self.values:
+            self.values[state] = {}
+
+        self.values[state][action] = value
+
+    def has(self, state, action):
+        return state in self.values and action in self.values[state]
+
+    def update(self, state, action, update_fn, value_to_set=None):
+        if self.has(state, action):
+            old_value = self.get(state, action)
+            new_value = update_fn(old_value)
+            self.set(state, action, new_value)
+
+        elif value_to_set is not None:
+            self.set(state, action, value_to_set)
+
+    def for_each(self, fn):
+        for state, actions in self.values.items():
+            for action in actions:
+                fn(state, action)
