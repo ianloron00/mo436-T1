@@ -40,6 +40,12 @@ class BaseTable:
         elif value_to_set is not None:
             self.set(state, action, value_to_set)
 
+    def increment(self, state, action):
+        self.update(state, action, lambda v: v + 1, 1)
+
+    def decay(self, state, action, decay_rate):
+        self.update(state, action, lambda v: v * decay_rate)
+
     def for_each(self, fn):
         for state, actions in self.values.items():
             for action in actions:

@@ -17,10 +17,9 @@ class QTable:
         if not self.values.has(state, action):
             self.values.set(state, action)
 
-    def get_greedy_action(self, state, ε=0):
+    def get_greedy_action(self, state, ε=0.1):
         if random() < ε:
             actions = self.all_actions
-
         else:
             actions_for_state = self.values.get_all_for_state(
                 state, self.all_actions)

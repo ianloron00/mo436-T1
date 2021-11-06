@@ -1,16 +1,17 @@
 import time
-from . import EligibilityTraces
+
+from sarsa.tables import BaseTable
 from . import QTable
+from . import BaseTable
 import time
 import pickle
 
 
 class SarsaLambda:
-    def __init__(self, gamma, alpha, _lambda, epsilon, actions):
+    def __init__(self, gamma, alpha, _lambda, actions):
         self.gamma = gamma
         self.alpha = alpha
         self._lambda = _lambda
-        self.epsilon = epsilon
         self.actions = actions
         self.eligibility_traces = None
         self.q_values = QTable(actions)
@@ -20,22 +21,21 @@ class SarsaLambda:
         self.timestamp = str(time.time()).replace(".", "_")
 
     def new_episode(self):
-        self.eligibility_traces = EligibilityTraces()
+        self.eligibility_traces = BaseTable()
         self.episode += 1
         self.episode_reward = 0
 
-    def next_action(self, state, epsilon=None):
-        return self.q_values.get_greedy_action(state, self.epsilon if epsilon is None else epsilon)
+    def next_action(self, state):
+        return self.q_values.get_greedy_action(state)
 
     def update(self, state_before, action, reward, state_after):
         expected_reward = self.q_values.get_expected_reward(
             state_before, action)
-        next_action = self.q_values.get_greedy_action(
-            state_after, self.epsilon)
+        next_action = self.q_values.get_greedy_action(state_after)
         next_expected_reward = self.q_values.get_expected_reward(
             state_after, next_action)
 
-        td_error = reward - expected_reward + self.gamma * next_expected_reward
+        delta = reward + self.gamma * next_expected_reward - expected_reward
 
         self.eligibility_traces.increment(state_before, action)
         self.q_values.ensure_exists(state_before, action)
@@ -43,11 +43,13 @@ class SarsaLambda:
         def update_q_values(state, action):
             old_expected_reward = self.q_values.get_expected_reward(
                 state, action)
-            new_expected_reward = old_expected_reward + self.alpha * \
-                td_error * self.eligibility_traces.get(state, action)
+            updated_expected_reward = old_expected_reward + self.alpha * \
+                delta * self.eligibility_traces.get(state, action)
+
             self.q_values.set_expected_reward(
-                state, action, new_expected_reward)
-            self.eligibility_traces.decay(state, action)
+                state, action, updated_expected_reward)
+            self.eligibility_traces.decay(
+                state, action, self.gamma * self._lambda)
 
         self.q_values.for_each(update_q_values)
         self.episode_reward += reward
@@ -68,7 +70,7 @@ class SarsaLambda:
                         protocol=pickle.HIGHEST_PROTOCOL)
 
     def __str__(self) -> str:
-        return f'Sarsa Lambda: $\gamma$ = {self.gamma} | $\lambda$ = {self._lambda} | $\epsilon$ = {self.epsilon}'
+        return f'Sarsa Lambda: $\gamma$ = {self.gamma} | $\lambda$ = {self._lambda}'
 
     def __repr__(self) -> str:
         return f'sarsa_lambda_{self.timestamp}'
