@@ -8,47 +8,37 @@ from sarsa import MOVEMENT, Blob, SarsaLambda
 
 style.use("ggplot")
 
-
-def moving_average(a, n=10):
-    ret = np.cumsum(a, dtype=float)
-    ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
-
-
 MOVE_REWARD = -1
 ENEMY_REWARD = -300
 FOOD_REWARD = 100
 
 SIZE = 10
 N_EPISODES = 30_000
-N_MAX_STEPS_IN_EPISODE = 1_000
+N_MAX_STEPS_IN_EPISODE = 10_000
 
 
 _lambda = 0.4
 _gamma = 0.99
 _alpha = 0.1
-_lambda = 0.1
-_epsilon = 0.1
 
 movements = (MOVEMENT.UP, MOVEMENT.DOWN, MOVEMENT.LEFT, MOVEMENT.RIGHT)
 movements_values = (MOVEMENT.UP.value, MOVEMENT.DOWN.value,
                     MOVEMENT.LEFT.value, MOVEMENT.RIGHT.value)
 
-
-# for _epsilon in 10**np.arange(-1, 3).astype(float):
-for _lambda in np.linspace(0, 1, 6):
+for _lambda in [0, 0.2, 0.4, 0.6, 0.8, 1]:
+    print(f'Epsilon :{_epsilon} and Lambda: {_lambda}')
 
     sarsa_learning = SarsaLambda(
-        _gamma, _alpha, _lambda, _epsilon, movements_values)
+        _gamma, _alpha, _lambda, movements_values)
 
     optimalvalues = []
 
     food = Blob(SIZE, SIZE - 1, SIZE - 1)
+    enemy = Blob(SIZE, 5, 5)
 
     for episode in tqdm(range(N_EPISODES)):
 
         player = Blob(SIZE, 0, 0)
-        enemy = Blob(SIZE)
 
         steps = 0
         total_reward = 0
@@ -74,13 +64,11 @@ for _lambda in np.linspace(0, 1, 6):
             total_reward += reward
 
             state_after = (player-food, player-enemy)
-            sarsa_learning.update(
-                state_before, action, reward, state_after)
+            sarsa_learning.update(state_before, action, reward, state_after)
 
         optimalvalues.append(total_reward)
 
     sarsa_learning.save_pickle()
-    moving_avg = moving_average(optimalvalues)
 
     fig, ax = plt.subplots(figsize=(10, 8))
     ax.plot([i for i in range(len(optimalvalues))], optimalvalues)
