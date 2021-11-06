@@ -1,4 +1,4 @@
-from q_learning.basis.dependencies import *
+from monte_carlo.basis.dependencies import *
 
 class Agent:
   def __init__(self, x=np.random.randint(0,10), y=np.random.randint(0,10)):

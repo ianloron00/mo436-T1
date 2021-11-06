@@ -1,4 +1,4 @@
-from q_learning.basis.agent import *
+from monte_carlo.basis.agent import *
 
 class Target(Agent):
   def __init__(self, x, y):

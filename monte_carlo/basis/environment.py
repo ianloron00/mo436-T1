@@ -1,12 +1,12 @@
 import gym
 from numpy.lib.utils import info
-from q_learning.basis.dependencies import *
-from q_learning.basis.agent  import Agent
-from q_learning.basis.player import Player
-from q_learning.basis.hunter import Hunter
-from q_learning.basis.target import Target
-from q_learning.basis.graphs import *
-from q_learning.basis.game_display import *
+from monte_carlo.basis.dependencies import *
+from monte_carlo.basis.agent  import Agent
+from monte_carlo.basis.player import Player
+from monte_carlo.basis.hunter import Hunter
+from monte_carlo.basis.target import Target
+from monte_carlo.basis.graphs import *
+from monte_carlo.basis.game_display import *
 import gym
 from gym.spaces.box import Box
 from gym.spaces.discrete import Discrete
