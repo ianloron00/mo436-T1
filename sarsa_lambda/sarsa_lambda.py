@@ -50,27 +50,26 @@ class SarsaLambda():
             self.nsa_table[state] = np.zeros(4)
             self.nsa_table[state][action] += 1
 
+        delta = reward + self.gamma*self.q_table[new_state][new_action] -self.q_table[state][action]
+
+        try:
+            self.E_table[state][action] += 1
+        except:
+            self.E_table[state] = np.zeros(4)
+            self.E_table[state][action] += 1
+
+        for id, oldstate in enumerate(self.states):
+
+            oldaction = self.actions[id]
+            alpha = 1/(self.nsa_table[oldstate][oldaction])
+            self.q_table[oldstate][oldaction] += alpha*delta*self.E_table[oldstate][oldaction]
+            self.E_table[oldstate][oldaction] = self.gamma*self.lambd*self.E_table[oldstate][oldaction]
+
         if done:
             self.E_table = {}
             self.actions = []
             self.states = []
-
-        else:
-
-            delta = reward + self.gamma*self.q_table[new_state][new_action] -self.q_table[state][action]
-
-            try:
-                self.E_table[state][action] += 1
-            except:
-                self.E_table[state] = np.zeros(4)
-                self.E_table[state][action] += 1
-
-            for id, oldstate in enumerate(self.states):
-
-                oldaction = self.actions[id]
-                alpha = 1/(self.nsa_table[oldstate][oldaction])
-                self.q_table[oldstate][oldaction] += alpha*delta*self.E_table[oldstate][oldaction]
-                self.E_table[oldstate][oldaction] = self.gamma*self.lambd*self.E_table[oldstate][oldaction]
+            
 
 
     def count_states(self):

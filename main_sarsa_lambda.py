@@ -9,16 +9,16 @@ from sarsa_lambda.basis.dependencies import *
 from sarsa_lambda.sarsa_lambda import SarsaLambda
 
 isTraining = True
-isStochastic = True
+isStochastic = False
 SAVE_IMAGES = True
 PATH = '.data'
 
-EPISODES = 150_000 if isTraining else 10
-GAMMA = 0.10 if isTraining else 0.0
+EPISODES = 30_000 if isTraining else 10
+GAMMA = 0.90 if isTraining else 0.0
 CONST_EPSILON = [100, 1000, 10000] if isTraining else 0
 LAMBDA = [0, 0.2, 0.4, 0.6, 0.8, 1]
 
-SHOW_EVERY = int(EPISODES/20) if isTraining else 1
+SHOW_EVERY = int(EPISODES/10) if isTraining else 1
 
 NOW = datetime.now().strftime('%Y%m%d_%H%M%S')
 NAME_COMPLEMENT = '_stochastic' if isStochastic else '_deterministic'
@@ -76,12 +76,11 @@ def sarsa_lambda(env):
                     new_obs, reward, done, _ = env.step(action)
                     episode_reward += reward
 
-                    if not done:
-                        if isTraining:
-                            new_action = agent.epsilon_greedy_policy(env, obs)
-                        else:
+                    if isTraining:
+                        new_action = agent.epsilon_greedy_policy(env, obs)
+                    else:
 
-                            new_action = agent.greedy_policy(env, obs)
+                        new_action = agent.greedy_policy(env, obs)
 
                     agent.update(env, obs, action, new_obs, new_action, reward, done)
 
