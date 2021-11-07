@@ -56,11 +56,11 @@ class Q_Function_Approximator(QLearning):
 
             for f in features:
                 self.weights[f] = np.random.random()
-        # else:
-            # print("LOADING WEIGHTS")
-            # with open("q_learning/q_weights/" + name_weights, "rb") as f:
-                # self.weights = pickle.load(f)
-            # print(self.weights)
+        else:
+            print("LOADING WEIGHTS")
+            with open("q_learning/q_weights/" + name_weights, "rb") as f:
+                self.weights = pickle.load(f)
+            print(self.weights)
 
     def epsilon_greedy_policy(self, env, epsilon, state):
     

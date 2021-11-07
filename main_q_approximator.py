@@ -10,12 +10,12 @@ from q_learning.q_learning import QLearning
 from q_learning.q_approximator import Q_Function_Approximator
 from q_learning.q_extractor_features import *
 
-isTraining = True
+isTraining = False
 isStochastic = True
-SAVE_IMAGES = True
+SAVE_IMAGES = False
 
 GAMMA = 0.95 if isTraining else 0.0
-EPISODES = 30 if isTraining else 10
+EPISODES = 50 if isTraining else 10
 EPSILON = 0.99 if isTraining else 0.005
 # achieves half of epsilon at 1/K-th of the number of timesteps.
 # decay = 2**(-log2(0.5/EPSILON) / (EPISODES / K)) ~ 2**(-1 / (EPISODES / K)) ~ 2**(-K / EPISODES)
@@ -55,6 +55,8 @@ def q_function_approximator(env):
             show = True
         else:
             show = False
+        #### comment it to show display ###
+        show = False
 
         while done == False and n_steps < N_MAX_STEPS:
             n_steps += 1
@@ -66,7 +68,6 @@ def q_function_approximator(env):
             if show:
                 env.render(time_fast=time_fast, time_slow=time_slow)
 
-            # if not done:
             q.update(env, obs, action, new_obs, reward) 
             
             if done:
@@ -92,7 +93,7 @@ def q_function_approximator(env):
     if (SAVE_WEIGHTS):
         path = 'q_learning/q_weights/' + NAME_WEIGHTS + '.pickle'
         with open(path, "wb") as f:
-          pickle.dump(q.get_weights, f)
+          pickle.dump(q.weights, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     env.close()
 
