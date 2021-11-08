@@ -7,28 +7,29 @@ import pickle
 from sarsa_fa.sarsa_approximator import Sarsa_Function_Approximator
 from sarsa_fa.sarsa_extractor_features import *
 
+
 isTraining = True
-isStochastic = True
+isStochastic =  False
 SAVE_IMAGES = True
 
 GAMMA = 0.95 if isTraining else 0.0
-EPISODES = 10000 if isTraining else 10
+EPISODES = 50 if isTraining else 10
 EPSILON = 0.99 if isTraining else 0.005
 EPS_DECAY = 2**(-4 / EPISODES) if isTraining else 1
 
 SHOW_EVERY = int(EPISODES/10) if isTraining else 1
 
 NAME_COMPLEMENT = '_stochastic' if isStochastic else '_deterministic'
-NAME_WEIGHTS = 'sarsa_weights_10x10' + NAME_COMPLEMENT
+NAME_WEIGHTS = 'q_weights_10x10' + NAME_COMPLEMENT
 
 SAVE_WEIGHTS = True if isTraining else False
 
-N_MAX_STEPS = 650
+N_MAX_STEPS = 200
 
 start_weights = None if isTraining else NAME_WEIGHTS + '.pickle'
 
-def sarsa_function_approximator(env):
-    sarsa_fa = Sarsa_Function_Approximator(gamma=GAMMA)
+def sarsa_function_approximator(env, LAMBDA):
+    sarsa_fa = Sarsa_Function_Approximator(gamma=GAMMA, LAMBDA=LAMBDA)
     sarsa_fa.initialize(env, name_weights=start_weights)
 
     epsilon = EPSILON
@@ -36,8 +37,9 @@ def sarsa_function_approximator(env):
     wins = []
     time_fast = 5 if isTraining else 30
     time_slow = 600
-
+    
     for i in range(EPISODES):
+        print("EP:" +str(i))
         obs = env.reset()
         done = False
         episode_reward = 0
@@ -65,6 +67,7 @@ def sarsa_function_approximator(env):
 
             sarsa_fa.update(env, obs, action, new_obs, new_action, reward) 
             
+
             if done:
                 scores.append(episode_reward)
                 wins.append(env.won)
@@ -74,17 +77,20 @@ def sarsa_function_approximator(env):
           
         epsilon *= EPS_DECAY
 
-    reward_title = 'sarsa_approximator_rewards_10x10' + NAME_COMPLEMENT
+    reward_title = 'sarsa_approximator_rewards_10x10' + NAME_COMPLEMENT + str(LAMBDA) + str(N_MAX_STEPS)+str(EPISODES)
     if not isTraining: 
         reward_title += '_after_training'
+    
     moving_avg = np.convolve(scores, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode='valid')
-    plot_rewards(moving_avg, reward_title, save=SAVE_IMAGES)
+    
+    plot_rewards(moving_avg, title=reward_title,LAMBDA=LAMBDA, save=SAVE_IMAGES)
 
-    victories_title = 'sarsa_approximator_victories_10x10' + NAME_COMPLEMENT
+    victories_title = 'sarsa_approximator_victories_10x10' + NAME_COMPLEMENT +str(LAMBDA)+str(N_MAX_STEPS) +str(EPISODES)
     if not isTraining: 
         victories_title += '_after_training'
+    
     victories_avg = np.convolve(wins, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode='valid')
-    plot_victories(victories_avg, victories_title, save=SAVE_IMAGES)
+    plot_victories(victories_avg,  title=victories_title, LAMBDA=LAMBDA, save=SAVE_IMAGES)
 
     if (SAVE_WEIGHTS):
         path = 'sarsa_fa/sarsa_weights/' + NAME_WEIGHTS + '.pickle'
@@ -92,6 +98,16 @@ def sarsa_function_approximator(env):
           pickle.dump(sarsa_fa.get_weights, f)
 
     env.close()
+   
 
-env = GameEnv(tabular=False, stochastic=isStochastic)
-sarsa_function_approximator(env)
+def main():
+    LAMBDAS = [1.0]
+    for l in LAMBDAS:
+        env = GameEnv(tabular=False, stochastic=isStochastic)
+        sarsa_function_approximator(env,l)
+    #plot_rewards_all(m,EPISODES=EPISODES,stochastic=isStochastic)
+    #plot_victories_all(v,EPISODES=EPISODES,stochastic=isStochastic)
+   
+if __name__ == '__main__':
+    main()
+

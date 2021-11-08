@@ -3,13 +3,15 @@ from sarsa_fa.sarsa_extractor_features import *
 import random
 
 class Sarsa_Function_Approximator():
-    def __init__(self, alpha=0.1, gamma=0.95):
+    def __init__(self, alpha=0.1, gamma=0.95, LAMBDA=0.2):
         self.ALPHA = alpha
         self.GAMMA = gamma
+        self.LAMBDA = LAMBDA
         self.weights = {}
         self.features = {}
         self.extractor = Sarsa_Simple_Extractor()
-
+        self.E = []
+        
     def get_weights(self):
         return self.weights
 
@@ -25,9 +27,13 @@ class Sarsa_Function_Approximator():
         target = reward + self.GAMMA * new_q_val
         
         delta_w = {}
+        i = 0 
         for f in gradient:
-            delta_w[f]  = self.ALPHA * (target - q_val) * gradient[f]
-            self.weights[f] += delta_w[f]
+            delta_w[f]  = (target - q_val)
+            self.E[i] = (self.GAMMA*self.LAMBDA*self.E[i])+ gradient[f]
+            self.weights[f] +=self.ALPHA *delta_w[f] * self.E[i]
+            i+=1
+        return 
     
  
     def get_q_value(self, state, action):
@@ -41,11 +47,23 @@ class Sarsa_Function_Approximator():
     
     def initialize (self, env, name_weights='sarsa_weights.pickle'):
         if name_weights == None:
+            
+            print("INITIALIZING WEIGHTS")
+            features = self.extractor.ini()
+
+            #print(features)
+            for f in features:
+                self.weights[f] = np.random.random()
+                self.E.append(0)
+            
+            '''
             print("INITIALIZING WEIGHTS")
             features = self.extractor.get_features(env.observation_space, env.action_space.sample())
 
             for f in features:
-                self.weights[f] = np.random.random()
+                self.weights[f] = np.random.random()  
+                self.E.append(0)
+            '''
 
     def epsilon_greedy_policy(self, env, epsilon, state):
     
