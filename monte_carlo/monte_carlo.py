@@ -12,26 +12,26 @@ class MonteCarlo():
         self.actions = []
         self.expected_return = []
 
-    def initialize (self, env):
+    def initialize (self, env, name_table = None):
 
-        #if name_table is None:
-        print("CREATING Q-TABLE, NS-TABLE and NSA-TABLE")
-        self.q_table = {}
-        self.ns_table = {}
-        self.nsa_table = {}
-        h = env.height
-        w = env.width
-        for x1 in range(-w+1, w):
-            for y1 in range(-h+1, h):
-                for x2 in range(-w+1, w):
-                    for y2 in range(-h+1, h):
-                        self.q_table[((x1, y1), (x2, y2))] = np.zeros(4)
-        # else:
-        #     print("LOADING Q-TABLE")
-        #     with open("q_learning/q_tables/" + name_table, "rb") as f:
-        #         self.q_table = pickle.load(f)
+        if name_table is None:
+            print("CREATING Q-TABLE, NS-TABLE and NSA-TABLE")
+            self.q_table = {}
+            self.ns_table = {}
+            self.nsa_table = {}
+            h = env.height
+            w = env.width
+            for x1 in range(-w+1, w):
+                for y1 in range(-h+1, h):
+                    for x2 in range(-w+1, w):
+                        for y2 in range(-h+1, h):
+                            self.q_table[((x1, y1), (x2, y2))] = np.zeros(4)
+        else:
+            print("LOADING Q-TABLE")
+            with open(r"./q_tables/" + name_table, "rb") as f:
+                self.q_table = pickle.load(f)
 
-        # return self.q_table
+        return self.q_table
 
     def update (self, env, state, action, new_state, reward, done):
 

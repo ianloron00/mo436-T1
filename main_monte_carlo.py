@@ -8,8 +8,8 @@ import pickle
 from monte_carlo.basis.dependencies import *
 from monte_carlo.monte_carlo import MonteCarlo
 
-isTraining = True
-isStochastic = True
+isTraining = False
+isStochastic = False
 SAVE_IMAGES = True
 PATH = '.data'
 
@@ -31,17 +31,17 @@ SAVE_TABLE = True if isTraining else False
 if not os.path.isdir('./data'):
     os.makedirs('./data')
 
-start_q_table = None # None or Filename
+start_q_table = 'monte_carlo_Q_table_deterministic20211103_123318' # None or Filename
 start_ns_table = None # None or Filename
 start_nsa_table = None # None or Filename
 
 start_q_table = None if isTraining else NAME_Q_TABLE + '.pickle'
-start_ns_table = None if isTraining else NAME_NS_TABLE + '.pickle'
-start_nsa_table = None if isTraining else NAME_NSA_TABLE + '.pickle'
+# start_ns_table = None if isTraining else NAME_NS_TABLE + '.pickle'
+# start_nsa_table = None if isTraining else NAME_NSA_TABLE + '.pickle'
 
 def monte_carlo(env):
     agent = MonteCarlo(gamma=GAMMA)
-    agent.initialize(env)
+    agent.initialize(env, name_table = start_q_table)
 
 
     scores = []
