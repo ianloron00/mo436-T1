@@ -1,46 +1,20 @@
 import sys
-import torch  
 import gym
-import numpy as np  
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 import matplotlib.pyplot as plt
 import pandas as pd
-from reinforce.basis.environment import * 
+from a2c.basis.environment import * 
+from a2c.a2c import * 
 
 # hyperparameters
 hidden_size = 256
-learning_rate = 3e-4
+learning_rate = 0.00001
 
 # Constants
 GAMMA = 0.99
 num_steps = 300
-max_episodes = 10000
+max_episodes = 1000
 SHOW_EVERY = int(max_episodes/10) 
-
-class ActorCritic(nn.Module):
-    def __init__(self, num_inputs, num_actions, hidden_size, learning_rate=3e-4):
-        super(ActorCritic, self).__init__()
-
-        self.num_actions = num_actions
-        self.critic_linear1 = nn.Linear(num_inputs, hidden_size)
-        self.critic_linear2 = nn.Linear(hidden_size, 1)
-
-        self.actor_linear1 = nn.Linear(num_inputs, hidden_size)
-        self.actor_linear2 = nn.Linear(hidden_size, num_actions)
-    
-    def forward(self, state):
-        state = Variable(torch.from_numpy(state).float().unsqueeze(0))
-        value = F.relu(self.critic_linear1(state))
-        value = self.critic_linear2(value)
-        
-        policy_dist = F.relu(self.actor_linear1(state))
-        policy_dist = F.softmax(self.actor_linear2(policy_dist), dim=1)
-
-        return value, policy_dist
-
 
 def a2c(env):
     '''
@@ -49,7 +23,7 @@ def a2c(env):
     '''
     num_inputs = 8
     num_outputs = 4
-    actor_critic = ActorCritic(num_inputs, num_outputs, hidden_size)
+    actor_critic = ActorCritic(num_inputs, num_outputs, hidden_size,learning_rate)
     ac_optimizer = optim.Adam(actor_critic.parameters(), lr=learning_rate)
 
     all_lengths = []
@@ -94,7 +68,7 @@ def a2c(env):
                 all_rewards.append(np.sum(rewards))
                 all_lengths.append(steps)
                 average_lengths.append(np.mean(all_lengths[-10:]))
-                if episode % 10 == 0:                    
+                if episode % 100 == 0:                    
                     sys.stdout.write("episode: {}, reward: {}, total length: {}, average length: {} \n".format(episode, np.sum(rewards), steps, average_lengths[-1]))
                 break
 
@@ -137,5 +111,5 @@ def a2c(env):
     plt.show()
 
 if __name__ == "__main__":
-    env = GameEnv(tabular=False,stochastic=False)
+    env = GameEnv(tabular=False,stochastic=True)
     a2c(env)    

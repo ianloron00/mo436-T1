@@ -1,4 +1,4 @@
-from reinforce.basis.agent import *
+from a2c.basis.agent import *
 
 class Player(Agent):
   def __init__(self, x, y):

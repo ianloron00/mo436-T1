@@ -1,4 +1,4 @@
-from reinforce.basis.dependencies import *
+from a2c.basis.dependencies import *
 
 class Agent:
   def __init__(self, x=np.random.randint(0,10), y=np.random.randint(0,10)):

@@ -1,12 +1,12 @@
 import gym
 from numpy.lib.utils import info
-from reinforce.basis.dependencies import *
-from reinforce.basis.agent  import Agent
-from reinforce.basis.player import Player
-from reinforce.basis.hunter import Hunter
-from reinforce.basis.target import Target
-from reinforce.basis.graphs import *
-from reinforce.basis.game_display import *
+from a2c.basis.dependencies import *
+from a2c.basis.agent  import Agent
+from a2c.basis.player import Player
+from a2c.basis.hunter import Hunter
+from a2c.basis.target import Target
+from a2c.basis.graphs import *
+from a2c.basis.game_display import *
 import gym
 from gym.spaces.box import Box
 from gym.spaces.discrete import Discrete
