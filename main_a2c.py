@@ -13,8 +13,8 @@ learning_rate = 0.00001
 # Constants
 GAMMA = 0.99
 num_steps = 300
-max_episodes = 1000
-SHOW_EVERY = int(max_episodes/10) 
+max_episodes = 3000
+SHOW_EVERY = int(max_episodes/500) 
 
 def a2c(env):
     '''
@@ -30,20 +30,20 @@ def a2c(env):
     average_lengths = []
     all_rewards = []
     entropy_term = 0
-    time_fast = 5 #if isTraining else 30
-    time_slow = 600
+    time_fast = 50 #if isTraining else 30
+    time_slow = 100
     for episode in range(max_episodes):
         log_probs = []
         values = []
         rewards = []
      
         state = env.reset()
-        '''
+        
         if episode % SHOW_EVERY == 0:
             show = True
         else:
             show = False
-        '''
+        
         for steps in range(num_steps):
             #print(state)
             value, policy_dist = actor_critic.forward(state[0])
@@ -60,7 +60,8 @@ def a2c(env):
             log_probs.append(log_prob)
             entropy_term += entropy
             state = new_state
-            
+            if show:
+                env.render(time_fast=time_fast, time_slow=time_slow)
             #env.render(time_fast=time_fast, time_slow=time_slow)
             if done or steps == num_steps-1:
                 Qval, _ = actor_critic.forward(new_state)
